@@ -58,3 +58,4 @@ _config/README
 _config/_config.pm
 _config/t/1.t
 t/SQCAS.t
+META.yml                                 Module meta-data (added by MakeMaker)

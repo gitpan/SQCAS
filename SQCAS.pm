@@ -183,7 +183,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 #our @EXPORT = qw(%CONFIG check_authorization check_authentication);
 
 
-our $VERSION = '0.23';
+our $VERSION = '0.24';
 
 
 =head1 METHODS
@@ -575,6 +575,16 @@ Most of the basic Apache stuff has been worked out. The SQCAS.yaml file was
 expanded and commented. I made a SQCAS.conf for all our Apache config stuff so
 admins can just Include it rather than edit the main conf. So far registering
 a new user & logging are functional if not quite complete or pretty.
+
+=item 0.23
+
+Tried to convert to Apache 2, but I had a horrible time with mod_perl
+1.99.whatever it was. I've reverted back and have tests passing again. This
+version is now in usage in a background role in a project in development at BU.
+The NewUser page will register new users, and if you add permissions into the
+database by hand, the $dbi->allowed method will function against it. The apache
+handlers also function for restricting pages and directory trees based on
+permissions.
 
 =back
 
