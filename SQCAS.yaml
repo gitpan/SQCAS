@@ -1,0 +1,7 @@
+--- #YAML:1.0
+DB_DATABASE: SQCAS
+DB_HOST: my.domain.org
+DB_PASSWD: passme
+DB_USER: foo
+COOKIE_NAME: SQCAS
+TIMEOUT: 900
