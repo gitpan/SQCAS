@@ -1,4 +1,4 @@
-Auth.pm
+Authorization.pm
 Makefile.PL
 MANIFEST
 README

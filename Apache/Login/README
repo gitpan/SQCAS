@@ -1,10 +1,5 @@
-ADD:
-The SQCAS user must be granted SELECT, INSERT and UPDATE permissions to
-the SQCAS db.
-
-
-SQCAS/DB version 0.01
-=====================
+SQCAS/Apache/Login version 0.01
+===============================
 
 The README is used to introduce the module and provide instructions on
 how to install the module, any machine dependencies it may have (for

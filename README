@@ -1,18 +1,21 @@
-SQCAS version 0.01
+SQCAS version 0.21
 ==================
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
-
-A README file is required for CPAN modules since CPAN extracts the
-README file from a module distribution so that people browsing the
-archive can use it get an idea of the modules uses. It is usually a
-good idea to provide version information here so that people can
-decide whether fixes for the module are worth downloading.
 
 INSTALLATION
+
+Before this system can be installed, you will need to set up a database and edit
+and install the config module. In order for the tests to work, you will also
+need to insert some data into the DB and remove it after the tests pass.
+
+The database schema is at SQCAS/DB/SQCAS.sql. It was designed for a MySQL
+server and will probably need to be modified to be used elsewhere. Once the
+database is set up, create a user for the system with SELECT, INSERT and UPDATE
+privileges.
+
+The config file is at SQCAS/SQCAS.yaml. All the information therein is read into
+the %CONFIG hash which is exported by SQCAS, and so should be available to any
+tool in the system.
 
 To install this module type the following:
 
@@ -23,15 +26,18 @@ To install this module type the following:
 
 DEPENDENCIES
 
-This module requires these other modules and libraries:
+This system requires these other modules and libraries:
 
-  blah blah blah
+  YAML
+  DBI
+  DBI::DBD # it was developed and tested using MySQL
+
+To use the modules in the SQCAS::Apache:: tree you will need a mod_perl
+enabled Apache webserver. Apache::DBI is higly recommended.
 
 COPYRIGHT AND LICENCE
 
-Put the correct copyright and licence information here.
-
-Copyright (C) 2004 by SeanQuinlan
+Copyright (C) 2004 by Sean Quinlan
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.1 or,

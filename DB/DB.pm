@@ -1,11 +1,43 @@
 package SQCAS::DB;
 
+=head1 NAME
+
+SQCAS::DB - DBI wrapper which adds a few SQCAS specific methods.
+
+=head1 SYNOPSIS
+
+  use SQCAS qw(:all);
+  my $dbh = $CONFIG{DBH};
+
+=head1 ABSTRACT
+
+  Wraps the DBI module, extending the database handle with some SQCAS specific
+  methods. This module is not intemded to be used directly - _config.pm
+  makes the connection using paramters from the SQCAS.yaml configuration.
+
+=head1 DESCRIPTION
+
+Used by _config.pm to connect to the SQCAS servers database. The database
+handle is avalable at $CONFIG{DBH}. Use this as you would normally use a DBI
+database handle. The methods described below are extensions to the normal DBI
+functionality.
+
+=head2 EXPORT
+
+None by default.
+
+=head2 METHODS
+
+=cut
+
+
 use 5.008;
 use strict;
 
 use vars qw($AUTOLOAD);
 
-our $VERSION = '0.1';
+our $VERSION = '0.4';
+# how to keep ERROR & OK in sync with the rest of SQCAS?!?
 use constant ERROR => 0;
 use constant OK => 1;
 use DBI;
@@ -14,6 +46,22 @@ use DBI;
 # Use for error handling by caller
 our $ERRSTR = '';
 
+=head2 connectDB
+
+Wrapper for DBI->connect. Mainly does some configuration checking and if the
+connection attempt fails will try every three seconds ten times.
+
+PARAMETERS:
+
+user:	Username to connect to the database with.
+
+password:	Password for user.
+
+server:	Type of database server. Defaults to mysql.
+
+host:	Host to connect to. Defaults to localhost.
+
+=cut
 sub connectDB {
     my $proto = shift;
     my $class = ref($proto) || $proto;
@@ -40,6 +88,7 @@ sub connectDB {
     my $dbh = '';
     my $attemp_count = 1;
     my $atrb = $params{DBIconnectAttributes} || { PrintError => 1 };
+	warn "DBI->connect($dsn,$user_name,$password,$atrb)\n" if $DEBUG >= 2;
 	
     # connect to database
     CONNECT: {
@@ -287,7 +336,7 @@ sub allowed {
 		WHERE Client = $params{CLIENT} AND User = $params{USER}{ID}
 		AND Resource = $resource AND MatchKey LIKE $key
 		AND (Permissions & $mask) = $mask";
-	warn("Q: $qr") if $debug;
+	warn("User Query: $qr\n") if $debug;
 	
 	my $has_perm = $self->{dbh}->selectrow_array($qr);
     if ($DBI::err) {
@@ -304,7 +353,7 @@ sub allowed {
 		WHERE Client = $params{CLIENT} AND FIND_IN_SET(GroupID,$grp_set)
 		AND Resource = $resource
 		AND MatchKey LIKE $key AND (Permissions & $mask) = $mask";
-	warn("Q: $qr") if $debug;
+	warn("Group Query: $qr\n") if $debug;
 	
 	$has_perm = $self->{dbh}->selectrow_array($qr);
 	if ($DBI::err) {
@@ -388,7 +437,12 @@ sub enum_to_array {
 	return split(/','/,$vals);
 } # enum_to_array
 
+=head2
 
+Replaces use of $DBI::errstr and $DBI::err. Returns error string from extension
+methods or $DBI::errstr as appropriate.
+
+=cut
 sub error {
     
     $ERRSTR ||= $DBI::errstr if $DBI::err;
@@ -422,36 +476,8 @@ sub DESTROY {
 
 1;
 __END__
-# Below is stub documentation for your module. You'd better edit it!
 
-=head1 NAME
-
-SQCAS::DB - Perl extension for blah blah blah
-
-=head1 SYNOPSIS
-
-  use SQCAS::DB;
-  blah blah blah
-
-=head1 ABSTRACT
-
-  This should be the abstract for SQCAS::DB.
-  The abstract is used when making PPD (Perl Package Description) files.
-  If you don't want an ABSTRACT you should also edit Makefile.PL to
-  remove the ABSTRACT_FROM option.
-
-=head1 DESCRIPTION
-
-Stub documentation for SQCAS::DB, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
-
-Blah blah blah.
-
-=head2 EXPORT
-
-None by default.
-
+=head1 TO DO
 
 =head1 HISTORY
 
@@ -465,24 +491,20 @@ Original version; created by h2xs 1.22 with options
 	-n
 	SQCAS::DB
 
-=back
+=item 0.4
 
+All the basic SQCAS required functions in place and working.
+
+=back
 
 
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
+L<DBI>
 
 =head1 AUTHOR
 
-Sean Quinlan, E<lt>seanq@localdomainE<gt>
+Sean Quinlan, E<lt>seanq@darwin.bu.eduE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 

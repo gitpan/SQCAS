@@ -1,0 +1,75 @@
+SQCAS/Apache version 0.01
+=========================
+
+Some quick notes on SQCAS configuration in the Apache server.
+
+Find the if mod_perl section:
+<IfModule mod_perl.c>
+# always set this to on under mod_perl (I think it should be in the default)
+    PerlTaintCheck On
+# some modules we can preload.
+    PerlModule Apache::DBI DBD::mysql CGI SQCAS SQCAS::DB
+
+# This is a sample <Location> directive. You can have as many of
+# these as you need to define your site.
+	<Location /SQCAS>
+# this section specifies that access to anything under this location
+# needs to be authorized by SQCAS
+	    AuthName 'SQCAS'
+		AuthType Custom
+		PerlAuthenHandler SQCAS::Apache::Authorization
+		require valid-user
+		
+# This sets up this location as handled by mod_perl
+	    SetHandler perl-script
+		PerlHandler Apache::Registry
+		PerlSendHeader On
+# Comment this out if you are using only handlers
+		Options +ExecCGI
+		
+# this should allow .htaccess files to overide settings here
+		AllowOverride All
+
+# here's an example of setting defaults. SQCAS::Apache::Authorization will look
+# to see if CLIENT was passed as an argument then check to see if it's defined
+# in apaches conf's somewhere
+        PerlSetVar CLIENT 1
+	</Location>
+	
+# the login and authenticate handlers have to be outside of the restricted
+# location(s) in order to be accessible. NewUser would need to be as well
+	<Location /login>
+	    SetHandler perl-script
+	    PerlHandler SQCAS::Apache::Login
+	</Location>
+	<Location /authenticate>
+	    SetHandler perl-script
+	    PerlHandler SQCAS::Apache::Authentication
+	</Location>
+
+</IfModule>
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+DEPENDENCIES
+
+This module requires these other modules and libraries:
+
+  blah blah blah
+
+COPYRIGHT AND LICENCE
+
+Put the correct copyright and licence information here.
+
+Copyright (C) 2004 Sean Quinlan
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself. 
+

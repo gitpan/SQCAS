@@ -3,10 +3,10 @@ use ExtUtils::MakeMaker;
 # See lib/ExtUtils/MakeMaker.pm for details of how to influence
 # the contents of the Makefile that is written.
 WriteMakefile(
-    'NAME'		=> 'SQCAS::Admin',
-    'VERSION_FROM'	=> 'Admin.pm', # finds $VERSION
-    'PREREQ_PM'		=> {'Mail::Sendmail' => .79}, # e.g., Module::Name => 1.1
+    'NAME'		=> 'SQCAS::Apache::Authentication',
+    'VERSION_FROM'	=> 'Authentication.pm', # finds $VERSION
+    'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
     ($] >= 5.005 ?    ## Add these new keywords supported since 5.005
-      (ABSTRACT_FROM => 'Admin.pm', # retrieve abstract from module
+      (ABSTRACT_FROM => 'Authentication.pm', # retrieve abstract from module
        AUTHOR     => 'Sean Quinlan <seanq@localdomain>') : ()),
 );

@@ -93,4 +93,4 @@ INSERT INTO Clients (Name,Domain,Admin,Description)
 INSERT INTO Permissions (Client,User,Resource,MatchKey,Permissions)
 	VALUES (001,0000000001,'SQCAS.Clients.ID','001',12);
 INSERT INTO Permissions (Client,GroupID,Resource,Permissions)
-	VALUES (001,001,'/cgi-bin/test_admin',8);
+	VALUES (001,001,'/SQCAS-test/welcome',8);

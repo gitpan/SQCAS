@@ -38,33 +38,34 @@ die "Problem connecting to database: $@" if $@;
 
 $CONFIG{CLIENTS} = $CONFIG{DBH}->client_info;
 
+# get user info table fields - will it get used a lot? Should we get the
+# client tables as well then? Should the field type be a value?
+foreach my $field (grep($_ ne "ID",
+		@{$CONFIG{DBH}->selectcol_arrayref("DESC UserInfo")})) {
+	$CONFIG{USER_INFO_FIELDS}{$field} = 1;
+} # foreach field in the UserInfo table
+
 1;
 __END__
 # Below is stub documentation for your module. You'd better edit it!
 
 =head1 NAME
 
-SQCAS::_config - Perl extension for blah blah blah
+SQCAS::_config - Reads SQCAS.yaml config file, connects to database and sets
+up systems %CONFIG hash.
 
 =head1 SYNOPSIS
 
-  use SQCAS::_config;
-  blah blah blah
+  Not to be used directly. Called by SQCAS.
 
 =head1 ABSTRACT
 
-  This should be the abstract for SQCAS::_config.
-  The abstract is used when making PPD (Perl Package Description) files.
-  If you don't want an ABSTRACT you should also edit Makefile.PL to
-  remove the ABSTRACT_FROM option.
+  Reads SQCAS.yaml config file, connects to database and sets
+  up systems %CONFIG hash.
 
 =head1 DESCRIPTION
 
-Stub documentation for SQCAS::_config, created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
-
-Blah blah blah.
+Not for direct use.
 
 =head2 EXPORT
 
@@ -83,24 +84,22 @@ Original version; created by h2xs 1.22 with options
 	-n
 	SQCAS::_config
 
+=item 0.1
+
+Reads YAML config file from /etc/, connects to database, sets up client lists
+and user table hash.
+
 =back
 
 
 
 =head1 SEE ALSO
 
-Mention other useful documentation such as the documentation of
-related modules or operating system documentation (such as man pages
-in UNIX), or any relevant external documentation such as RFCs or
-standards.
-
-If you have a mailing list set up for your module, mention it here.
-
-If you have a web site set up for your module, mention it here.
+L<SQCAS>
 
 =head1 AUTHOR
 
-Sean Quinlan, E<lt>seanq@localdomainE<gt>
+Sean Quinlan, E<lt>seanq@darwin.bu.eduE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
