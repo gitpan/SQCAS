@@ -53,3 +53,5 @@ $rc = $user->disable;
 ok($rc == OK, 'User disabled.');
 
 # note subsequent tests will fail due to re-use of username and email
+# DELETE FROM UserInfo WHERE Firstname = 'Harry';
+# DELETE FROM Users WHERE Username = 'Tester';

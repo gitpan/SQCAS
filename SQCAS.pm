@@ -183,7 +183,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 #our @EXPORT = qw(%CONFIG check_authorization check_authentication);
 
 
-our $VERSION = '0.22';
+our $VERSION = '0.23';
 
 
 =head1 METHODS
@@ -568,6 +568,13 @@ working on the docs.
 
 Added tests for user object and disable/enable methods. Small additions to
 docs, like fixing my email address in this package! ;)
+
+=item 0.23
+
+Most of the basic Apache stuff has been worked out. The SQCAS.yaml file was
+expanded and commented. I made a SQCAS.conf for all our Apache config stuff so
+admins can just Include it rather than edit the main conf. So far registering
+a new user & logging are functional if not quite complete or pretty.
 
 =back
 

@@ -9,7 +9,7 @@ require Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(%CONFIG);
 
-our $VERSION = '0.1';
+our $VERSION = '0.4';
 
 # read in config file and set up global %CONFIG - this should
 # be usable as is by any module that bases this package? And if
@@ -28,6 +28,13 @@ our %CONFIG = %{$HR_config_params};
 $^W++ if $CONFIG{DEBUG};
 require diagnostics && import diagnostics
 	if $CONFIG{DEBUG} && $CONFIG{DEBUG} > 2;
+
+#warn "URI_BASE=$CONFIG{URI_BASE}";
+foreach my $uri (grep(m/_URI$/, keys %CONFIG)) {
+#	die "remapping: $CONFIG{$uri} -> $CONFIG{URI_BASE}$CONFIG{$uri}\n";
+	$CONFIG{$uri} = "$CONFIG{URI_BASE}$CONFIG{$uri}";
+} # for each uri
+warn "LOGIN_URI=$CONFIG{LOGIN_URI}\n";
 
 # connect to db
 use SQCAS::DB;

@@ -47,6 +47,9 @@ CREATE TABLE GroupInfo (
   FOREIGN KEY (Owner) REFERENCES UserInfo(ID)
 ) TYPE=MyISAM PACK_KEYS=1 CHECKSUM=1;
 
+INSERT INTO GroupInfo VALUES (100,'users',1,
+	'Default group. All registered users should be a member of this group');
+
 DROP TABLE IF EXISTS Permissions;
 CREATE TABLE Permissions (
   Client SMALLINT(3) UNSIGNED ZEROFILL NOT NULL DEFAULT '000',
@@ -61,6 +64,10 @@ CREATE TABLE Permissions (
   FOREIGN KEY (User) REFERENCES UserInfo(ID),
   FOREIGN KEY (GroupID) REFERENCES GroupInfo(ID)
 ) TYPE=MyISAM PACK_KEYS=1 CHECKSUM=1;
+
+INSERT INTO Permissions (GroupID,Resource,Permissions)
+	VALUES (100,'/SQCAS/welcom',8);
+
 
 DROP TABLE IF EXISTS Clients;
 CREATE TABLE Clients (

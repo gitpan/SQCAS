@@ -88,18 +88,22 @@ sub handler {
     return OK unless $apache->is_initial_req;
     my $user = shift || '';
     my $sent_pw = shift || '';
-	my $start_url = $CONFIG{WELCOME_PAGE};
+	my $start_url = $CONFIG{WELCOME_PAGE_URI};
 	
 	# if the session token is available, they are logged in, let authz work
-	my $cookie_name = $apache->dir_config('COOKIE_NAME') || $CONFIG{COOKIE_NAME};
-	my $cookies = $apache->header_in('Cookie') || '';
-    return OK if $cookies =~ /$cookie_name=/
-		|| $apache->err_header_out($cookie_name);
-
 	my $CGI = new CGI;
-	
+	my $cookie_name = $apache->dir_config('COOKIE_NAME') || $CONFIG{COOKIE_NAME};
+#	my $cookies = $apache->header_in('Cookie') || '';
+#	if ($cookies =~ /$cookie_name=/
+#			|| $apache->err_header_out($cookie_name)) {
+#		gripe("Redirecting to $start_url.") if $CONFIG{DEBUG};
+#		print $CGI->redirect("$start_url");
+#		return OK;
+#	} # if already have a cookie for this client
+
 	gripe("user = $user, sent_pw = $sent_pw, start_url = $start_url\n")
 		if $CONFIG{DEBUG};
+	
 	unless ($user && $sent_pw) {
 		my %params = $CGI->Vars;
 		$user = $params{Username} || '';

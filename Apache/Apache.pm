@@ -68,6 +68,49 @@ if ($ENV{MOD_PERL}) {
 	*SQCAS::warning_notes = *warning_notes;
 } # if we're actually under mod_perl
 
+
+=head2 B<get_session_id()>
+
+Get the current session ID. 
+
+Parameters:
+  - None 
+
+Return value:
+  - session id from the session table
+
+=cut
+sub get_session_id {
+#    my $self = shift;
+	my $sess_name = shift;# || $self->{apache}->dir_config('CookieName');
+
+	my $session = get_cookie($sess_name);
+
+	return $session;
+} # get_session_id
+
+
+=head2 B<get_cookie()>
+
+ Get the a cookie for the site based on its name
+
+ Parameters:
+  - Name of the cookie
+
+ Return value:
+  - Cookie value. Might need additional parsing for the separate parts
+
+=cut
+sub get_cookie {
+#    my $self = shift;
+	my $cookie_name = shift;
+
+	my ($cookie) = $APACHE->headers_in->{'Cookie'} =~ /$cookie_name=([^;]+)/;
+
+	return $cookie || '';	
+} # get_cookie
+
+
 =head2 error
 
 

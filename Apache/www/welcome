@@ -1,0 +1,77 @@
+#!/usr/bin/perl -wT
+
+=head1 DESCRIPTION
+
+This is the first page you see once you've successfully logged in the system.
+It contains a welcome message and buttons which point to all functionality
+which is currently available.
+
+=cut
+
+# Welcome page
+
+$ENV{'PATH'} = '/usr/bin/perl';
+use strict;
+my $mtime = (stat $0)[9];
+
+# Load any ther modules needed and set $VERSION
+use CGI qw(:standard);
+use SQCAS::DB;
+(my $me) = $0 =~ m{/([\w\-.]+)$};
+our $VERSION = "$me V0.4";
+
+# Set up the debug value for this invocation
+use SQCAS::Apache;
+use SQCAS qw(:all);
+our $DEBUG = $CONFIG{DEBUG};
+our $CGI = new CGI;
+our %Params = $CGI->Vars;
+$Params{myself} = $CGI->self_url;
+$Params{myself} =~ s/\?.+//; # strip url encoded data
+$DEBUG += $Params{debug} if $Params{debug};
+$Params{DEBUG} = $DEBUG;
+
+# If docs requested, call pod2html on itself
+if ($Params{State} && $Params{State} eq "Help") {
+    $CGI->header();
+    print `/usr/bin/pod2html $0`;
+    $CGI->end_html();
+    exit;
+} # if user docs requested
+
+# Get logged in users information from session tag
+my $sessiontag = SQCAS::Apache::get_session_id($CONFIG{COOKIE_NAME});
+error("Could not retrieve session token") unless $sessiontag;
+
+my %userdat = $CONFIG{DBH}->userdat($sessiontag);
+error($CONFIG{DBH}->error) if $CONFIG{DBH}->error;
+
+
+my $warnings = warning_notes();
+#$WWW->header_experimental();
+$CGI->header();
+
+print <<HTML_OUT;
+
+$warnings
+
+
+<P>Dear $userdat{FullName},<BR><BR>
+
+Welcome to the SQCAS server.
+
+$VERSION
+
+HTML_OUT
+
+$CGI->end_html();
+exit;
+
+=head1 AUTHORS
+
+Sean Quinlan, seanq@darwin.bu.edu
+
+Please email us with any changes you make or suggestions for changes/additions.
+Thank you!
+
+=cut

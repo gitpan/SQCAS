@@ -19,7 +19,8 @@ SQCAS::Apache::Authorization - Apache handler for authorizing users.
 
 =head1 DESCRIPTION
 
-Stub documentation for SQCAS::Apache::Authorization, created by h2xs. It looks like the
+Stub documentation for SQCAS::Apache::Authorization, created by h2xs. It looks
+like the
 author of the extension was negligent enough to leave the stub
 unedited.
 
@@ -40,7 +41,7 @@ use SQCAS::Apache;
 use Apache::URI;
 use Apache::Constants qw(:common);
 
-our $VERSION = '0.4';
+our $VERSION = '0.5';
 
 
 =head1 METHODS
@@ -94,17 +95,23 @@ sub authorize {
 	
 	my $cookie_name = $apache->dir_config('COOKIE_NAME') || $CONFIG{COOKIE_NAME};
 	my $debug =  $apache->dir_config('DEBUG') || $CONFIG{DEBUG};
-	my $loginURI = $apache->dir_config('LOGIN_URI') || $CONFIG{LOGIN_URI};
+	# having a weird problem with %CONFIG getting here - but not modified!?!
+	my $loginURI = $apache->dir_config('LOGIN_URI')
+		|| $CONFIG{LOGIN_URI};
 	my $forbiddenURI = $apache->dir_config('FORBIDDEN_URI')
 		|| $CONFIG{FORBIDDEN_URI};
 	my $rem_ip = $apache->connection->remote_ip;
+	gripe("URI_BASE = $CONFIG{URI_BASE}, loginURI = $loginURI, forbiddenURI = $forbiddenURI") if $debug;
 	
 	my $request = $apache->uri;
+	# allow acess to public directory where Login, NewUser and such are stored
+	gripe("Auth request received for $request from $rem_ip.") if $debug;
+	return OK if $request =~ m{$CONFIG{URI_BASE}/public/};
+	
 	$apache->custom_response(AUTH_REQUIRED,
 		"$loginURI?uri=$request&code=" . AUTH_REQUIRED);
 	$apache->custom_response(FORBIDDEN, "$forbiddenURI?uri=$request");
 	
-	gripe("Authz request for $request from $rem_ip.");
 	my $client = $apache->dir_config('CLIENT') || 0;
 	unless ($client) {
 		my $uri = $apache->parsed_uri;
@@ -117,12 +124,12 @@ sub authorize {
 		} # no client provided and couldn't find by domain
 	} # client required
 	
-	my $timeout = $apache->dir_config('TIMEOUT')
-		|| $CONFIG{CLIENTS}{$client}{Timeout};
+	my $timeout = $CONFIG{CLIENTS}{$client}{Timeout}
+		|| $apache->dir_config('TIMEOUT') || $CONFIG{TIMEOUT};
 	
-    my $cookies = $apache->header_in('Cookie') || '';
-    $cookies    =~ /$cookie_name=(\w*)/;
-    my $cookie  = $1 || '';
+	my $cookies = $apache->header_in('Cookie') || '';
+	$cookies    =~ /$cookie_name=(\w*)/;
+	my $cookie  = $1 || '';
 	
 	unless ($cookie) {
 		# check err_header in case auth internal redirect
@@ -142,7 +149,7 @@ sub authorize {
 			&& return AUTH_REQUIRED) unless $cookie;
 	} # if no cookie
 	
-	
+	gripe("COOKIE => $cookie, URI => $request, TIMEOUT => $timeout, CLIENT => $client");
 	my $is_authorized = check_authorization({COOKIE => $cookie,
 		URI => $request, DEBUG => $debug, IP => $rem_ip,
 		TIMEOUT => $timeout, CLIENT => $client, RESOURCE => $request,
@@ -159,6 +166,7 @@ sub authorize {
 	if ($is_authorized == FORBIDDEN) {
 		gripe("User not authorized to access $request: "
 			. "$CONFIG{ERRSTR}."); 
+		gripe("Should be redirected to $forbiddenURI.");
 		return FORBIDDEN;
 	} # user was denied, redirect to appropriate page
 	

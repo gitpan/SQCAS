@@ -50,7 +50,7 @@ use Mail::Sendmail;
 our $AUTOLOAD = '';
 
 
-our $VERSION = '0.22';
+our $VERSION = '0.6';
 
 =head2 new
 
@@ -109,7 +109,7 @@ sub new {
 	my $valid_Password = $self->validate_Password(%params);
 	my $valid_Email    = $self->validate_Email(%params);
 	
-	unless ($valid_Username ==OK && $valid_Password == OK
+	unless ($valid_Username == OK && $valid_Password == OK
 			&& $valid_Email == OK) {
 		gripe("Username is unusable.") unless $valid_Username;
 		gripe("Password is unusable.") unless $valid_Password;
@@ -129,25 +129,57 @@ sub new {
 	
 	# add user to database and set user ID in object
 	my $QEmail = $CONFIG{DBH}->quote($params{Email});
-	$CONFIG{DBH}->do("INSERT INTO UserInfo (Email,regdate)
-		VALUES ($QEmail,CURRENT_DATE)");
+	my $email_used = $CONFIG{DBH}->selectrow_array("SELECT ID
+		FROM UserInfo WHERE Email = $QEmail");
+	error('Problem checking if Email already used: '
+		. $CONFIG{DBH}->error) if $CONFIG{DBH}->error;
+	gripe("Email $QEmail is already used. Perhaps you are already registered?")
+		&& return FORBIDDEN if $email_used;
+	
+	# add any other user data provided
+	my $set_vals = '';
+	foreach my $field (%{$CONFIG{USER_INFO_FIELDS}}) {
+		next if $field eq 'Email'; # already done
+		if ($params{$field}) {
+			my $validation_method = "validate_$field";
+			my $is_valid = $self->$validation_method(%params);
+			unless ($is_valid == OK) {
+				gripe("Value for $field not accepted, please use EditAccount "
+					. ' to add.');
+				next;
+			} # don't set invalid fields
+			
+			my $Qval = $CONFIG{DBH}->quote($params{$field});
+			$set_vals .= ", $field = $Qval";
+		} # if value for field provided
+	} # for each possible field
+	
+	$CONFIG{DBH}->do("INSERT INTO UserInfo SET Email = $QEmail,
+		regdate = CURRENT_DATE$set_vals");
 	error('Problem entering users Email and generating User ID: '
 		. $CONFIG{DBH}->error) if $CONFIG{DBH}->error;
 	
 	my $id = $CONFIG{DBH}->selectrow_array("SELECT LAST_INSERT_ID()");
 	error('No ID returned by database?!') unless $id;
 	
+	$self->{ID} = $id;
+	$self->{Username} = $params{Username};
+	
 	my $QUsername = $CONFIG{DBH}->quote($params{Username});
-	my $Qpass = $CONFIG{DBH}->quote($params{Password});
+	my $cryptpass = $self->crypt_pass($params{Password});
+	my $Qpass = $CONFIG{DBH}->quote($cryptpass);
 	$CONFIG{DBH}->do("INSERT INTO Users (User, Username, Password)
 		VALUES ($id, $QUsername, $Qpass)");
 	error('Problem registering user in the Users table: '
 		. $CONFIG{DBH}->error) if $CONFIG{DBH}->error;
 	
-	$self->{ID} = $id;
-	$self->{Username} = $params{Username};
-	
 	# add to default group
+	$CONFIG{DBH}->do("INSERT INTO Groups VALUES ($id,$CONFIG{DEFAULT_GROUP})");
+	error('Problem adding user to default group: '
+		. $CONFIG{DBH}->error) if $CONFIG{DBH}->error;
+	
+	# add client specific user info
+	
 	
 	return $self;
 } # new
@@ -743,6 +775,26 @@ sub set_Password {
 	
 	return OK;
 } # set_Password
+
+
+sub crypt_pass {
+    my $self   = shift;
+    my $passwd = shift || '';
+	
+    my @salt  = ('a' .. 'z', 0 .. 9, '/', 'A' .. 'Z', '.');
+	my $salt = join('', (@salt[int(rand($#salt)), int(rand($#salt))]));
+	
+	if ($passwd) {
+		return crypt($passwd,$salt);
+	} # if we were provided a password, just encrypt
+	
+    my @chars = ('*', '_', '-', @salt, '#', '!', '@');
+    my $word;
+    foreach (0 .. int(rand(2))+6) { $word .= $chars[int(rand($#chars))] };
+
+    return ($word,crypt($word,$salt));
+} # passgen
+
 
 # only setting username and password need special handling and all the rest
 # are in UserInfo

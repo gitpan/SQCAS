@@ -1,11 +1,39 @@
 --- #YAML:1.0
+# This section provides the information required for DBI to connect
+# to the SQCAS database. Minimally the password should be changed!
 DB_DATABASE: SQCAS
 DB_HOST: localhost
 DB_PASSWD: local_passwd
 DB_USER: CAS_query
+DEFAULT_GROUP: 100
+
+# Set this to true argument to turn on debugging. Higher numbers further
+# increase verbosity.
+DEBUG: 1
+
+# The name of the session token. This is used as the default cookie name for
+# all logins on this server. Other clients, or multiple projects on this
+# server, should specify their own name.
 COOKIE_NAME: SQCAS
+
+# Default timeout to assign new clients. Actual timeout for requests is
+# determined by the timeout field in the database for the specific client
 TIMEOUT: 900
-AUTHENTICATION_URI: '/cgi-bin/authenticate'
-LOGIN_URI: '/cgi-bin/login'
-FORBIDDEN_URI: '/cgi-bin/access_denied'
-WELCOME_PAGE: '/index.html'
+
+# The base URI for SQCAS server pages. For a simple test server, you could just
+# set SQCAS_BASE_URI to /cgi-bin. If not using cgi-bin, then the Apache server
+# will need to be configured to add this uri as an additional tree handled by
+# mor_perl.
+URI_BASE: '/SQCAS'
+
+# Here are all the default names for SQCAS server pages. These are used for
+# generating internal links and redirects. For these pages to be available the
+# appropriate mod_perl handlers must be defined in Apache's configuration. See
+# the README in the SQCAS::Apache directory for more information.
+# SQCAS_BASE_URI will be prepended to all the URI's below EXCEPT those that
+# end in .html, which will be server_root_ralative URI's (normally the local
+# htdocs directory).
+AUTHENTICATION_URI: '/public/authenticate'
+LOGIN_URI: '/public/login'
+FORBIDDEN_URI: '/public/access_denied'
+WELCOME_PAGE_URI: '/welcome'

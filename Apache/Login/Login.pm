@@ -64,13 +64,14 @@ sub handler {
 	elsif (exists $params{code} && $params{code} == FORBIDDEN) {
 		$message = "User authentication failed:";
 	} # if forbidden - I don't think this should be a return case
-		
+	
+	my $auth_page = $CONFIG{AUTHENTICATION_URI};
 	my $warnings = warning_notes();
 	
 	print $CGI->header, $CGI->start_html("SQCAS default login page");
 	print "$message\n$warnings\n\n";
 	print $CGI->h1("Please enter username and password:"), "\n";
-	print $CGI->start_form(-action => $CONFIG{AUTHENTICATION_URI}), "\n",
+	print $CGI->start_form(-action => $auth_page), "\n",
 		"Username: ";
 	print $CGI->textfield(-name => 'Username',
 		-default => $params{Username}), "\n";
