@@ -9,10 +9,17 @@ SQCAS::Admin::User - Creates user objects for accessing and modifying user data.
   use SQCAS::Admin::User;
 
   my $user = SQCAS::Admin::User->new(%userinfo);
-  die "Couldn't create new user" unless $created;
+  die "Couldn't create new user" if $user == ERROR;
   
   my $user = SQCAS::Admin::User->load({ID => 1234567654});
-  die $user unless ref $user;
+  die "Couldn't load user." if $user == ERROR;
+  
+Or even better error reporting where appropriate:
+
+  if (! ref $user && $user == ERROR) {
+    my @errors = warning_notes();
+	die "Failed to load user:\n\t" . join("\n\t",@errors) . "\n";
+  } # if error
 
 =head1 ABSTRACT
 
@@ -43,7 +50,7 @@ use Mail::Sendmail;
 our $AUTOLOAD = '';
 
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 =head2 new
 
@@ -102,7 +109,8 @@ sub new {
 	my $valid_Password = $self->validate_Password(%params);
 	my $valid_Email    = $self->validate_Email(%params);
 	
-	unless ($valid_Username && $valid_Password && $valid_Email) {
+	unless ($valid_Username ==OK && $valid_Password == OK
+			&& $valid_Email == OK) {
 		gripe("Username is unusable.") unless $valid_Username;
 		gripe("Password is unusable.") unless $valid_Password;
 		gripe("Email is unusable.") unless $valid_Email;
@@ -111,7 +119,7 @@ sub new {
 	
 	# check to see if Username is already used
 	my $Quser = $CONFIG{DBH}->quote($params{Username});
-	my $already_used = $CONFIG{DBH}->selectrow_aray("SELECT User FROM
+	my $already_used = $CONFIG{DBH}->selectrow_array("SELECT User FROM
 		Users WHERE Username = $Quser");
 	error('Problem checking if Username already used: '
 		. $CONFIG{DBH}->error) if $CONFIG{DBH}->error;
@@ -121,8 +129,8 @@ sub new {
 	
 	# add user to database and set user ID in object
 	my $QEmail = $CONFIG{DBH}->quote($params{Email});
-	$CONFIG{DBH}->do("INSERT INTO UserInfo SET Email = $QEmail,
-		SET regdate = CURRENT_DATE()");
+	$CONFIG{DBH}->do("INSERT INTO UserInfo (Email,regdate)
+		VALUES ($QEmail,CURRENT_DATE)");
 	error('Problem entering users Email and generating User ID: '
 		. $CONFIG{DBH}->error) if $CONFIG{DBH}->error;
 	
@@ -180,7 +188,7 @@ sub load {
 	# get ID if Username provided
 	if ($params{Username}) {
 		my $Quser = $CONFIG{DBH}->quote($params{Username});
-		$params{ID} = $CONFIG{DBH}->selectrow_aray("SELECT User FROM
+		$params{ID} = $CONFIG{DBH}->selectrow_array("SELECT User FROM
 			Users WHERE Username = $Quser");
 		error('Problem getting user id: ' . $CONFIG{DBH}->error)
 			if $CONFIG{DBH}->error;
@@ -192,6 +200,7 @@ sub load {
 	my $rc = $self->_fetch_user_data(%params);
 	gripe('Problem loading user data.') && return ERROR if $rc == ERROR;
 	
+	$self->{ID} = $params{ID};
 	return $self;
 } # load
 
@@ -201,19 +210,56 @@ sub _fetch_user_data {
 	my $self = shift;
 	my %params = ref $_[0] eq "HASH" ? %{$_[0]} : @_;
 	
-	my $getdat = join(", ",@{$CONFIG{USER_INFO_FIELDS}});
+	my $getdat = join(", ",keys %{$CONFIG{USER_INFO_FIELDS}});
 	my $HR_userinfo = $CONFIG{DBH}->selectrow_hashref("SELECT $getdat
 		FROM UserInfo WHERE ID = $params{ID}");
 	error("Problem getting user info: " . $CONFIG{DBH}->error)
 		if $CONFIG{DBH}->error;
 	
 	gripe("No user info found for $params{ID}.") && return ERROR
-		unless $HR_userinfo->{ID};
+		unless $HR_userinfo->{Email};
 	
 	map { $self->{$_} = $HR_userinfo->{$_} } keys %{$HR_userinfo};
 		
 	return OK
 } # fetch_user_data
+
+
+=head2 disable
+
+Mark a user as diabled. Authentication will be denied.
+
+=cut
+sub disable {
+	my $self = shift;
+	my %params = ref $_[0] eq "HASH" ? %{$_[0]} : @_;
+	
+	$CONFIG{DBH}->do("UPDATE Users SET Disabled = 'Yes'
+		WHERE User = $self->{ID} LIMIT 1");
+	error("Problem disabling user: " . $CONFIG{DBH}->error)
+		if $CONFIG{DBH}->error;
+	
+	return OK;
+} # disable
+
+
+=head2 enable
+
+Reset disabled flag to 'No'.
+
+=cut
+sub enable {
+	my $self = shift;
+	my %params = ref $_[0] eq "HASH" ? %{$_[0]} : @_;
+	
+	$CONFIG{DBH}->do("UPDATE Users SET Disabled = 'No'
+		WHERE User = $self->{ID} LIMIT 1");
+	error("Problem enabling user: " . $CONFIG{DBH}->error)
+		if $CONFIG{DBH}->error;
+	
+	return OK;
+} # enable
+
 
 
 =head2 Accessor, Mutator and Validation methods
@@ -777,6 +823,10 @@ Base adaption.
 
 new, load, validate, get an set methods in place as well as stub new user
 email notification. Next come the tests.
+
+=item 0.22
+
+Added tests for user object and disable/enable methods. Small additions to docs.
 
 =back
 

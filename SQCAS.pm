@@ -66,6 +66,25 @@ that admins could have that information on a user (such as username, password,
 full name, maybe UID etc) which is used elsewhere for system logins and such is
 automatically synced.
 
+***
+
+Open question. Currently stuff is fairly well spread out into modules in a
+layout that made sense to me. However it occurs to me that some (many?) users
+might not like having to type:
+
+  use SQCAS::Admin::User;
+  my $user = SQCAS::Admin::User->new({ID => $id});
+
+To create a new user, but might rather type:
+
+  use SQCAS;
+  my $user = SQCAS->new_user({ID => $id});
+
+And leave me to worry about where User.pm really lived, and have the $user
+object still behave as a user object only. I haven't done that before but it
+seems feasable even if a bit complex internally?
+
+***
 
 =head2 RESPONSE CODES
 
@@ -164,7 +183,7 @@ our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 #our @EXPORT = qw(%CONFIG check_authorization check_authentication);
 
 
-our $VERSION = '0.21';
+our $VERSION = '0.22';
 
 
 =head1 METHODS
@@ -545,6 +564,11 @@ yet but that will be my next task before moving on to the Apache handlers for
 registering a new user and a user view edit account handler. Also started
 working on the docs.
 
+=item 0.22
+
+Added tests for user object and disable/enable methods. Small additions to
+docs, like fixing my email address in this package! ;)
+
 =back
 
 
@@ -562,11 +586,11 @@ If you have a web site set up for your module, mention it here.
 
 =head1 AUTHOR
 
-SeanQuinlan, E<lt>seanq@suse.deE<gt>
+SeanQuinlan, E<lt>seanq@darwin.bu.eduE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2004 by SeanQuinlan
+Copyright (C) 2004 by Sean Quinlan
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself, either Perl version 5.8.1 or,
